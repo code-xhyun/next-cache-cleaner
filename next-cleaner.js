@@ -133,6 +133,9 @@ async function findNextFolders(startPath, foundFolders = []) {
       const filePath = path.join(startPath, file);
 
       try {
+        if (!fs.existsSync(filePath)) {
+          continue;
+        }
         const stats = fs.statSync(filePath);
 
         if (stats.isDirectory()) {
@@ -249,11 +252,17 @@ async function main() {
 
   logMessage(`\nFound ${allFoldersToDelete.length} .next folders to delete.`);
   logMessage("\nFolders to be deleted:");
+  
+  const totalSize = allFoldersToDelete.reduce((sum, folder) => sum + folder.size, 0);
+  const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+  
   allFoldersToDelete.forEach((folder) => {
     const sizeMB = (folder.size / 1024 / 1024).toFixed(2);
     const date = folder.mtime.toLocaleDateString();
     logMessage(`- ${folder.path} (${sizeMB}MB, last modified: ${date})`);
   });
+  
+  logMessage(`\nTotal size: ${totalSizeMB}MB`);
 
   if (CONFIG.DRY_RUN) {
     logMessage("\nDRY RUN mode: No actual deletions performed.");
